@@ -1,7 +1,7 @@
 $(document).ready(function () {
 
     let database = loadDB();
-    console.log(database.ref().child('users'));
+    // console.log(database.ref().child('users'));
     let id = $("#details input[type='text']");
     let formButton = $("#details input[type='button']");
 
@@ -36,30 +36,42 @@ $(document).ready(function () {
     });
 
     $("#states div input[type='button']").on("click", function () {
-        // database.ref('users/'+id.val()+'/').set({
-        //     list: $("select").val(),
-        // });
-
-        $("body").on("click", ".addValue", function () {
-            console.log($(this).parent().text());
-            let updates = {};
-            updates['/users/'+id.val()+'/'+$(this).parent().text()+'/'] = 7;
-            database.ref().update(updates);            
-        })
-
-        let updates = {};
-        updates['/users/'+id.val()+'/'+$("select").val()+'/'] = [];
-        database.ref().update(updates);
-        $("#states").append("<div class=''>"+
-            "<h2>"+$("select").val()+"<input type='button' value='+' class='addValue'></h2>"+
-        "</div>");
-        // console.log($("select").val());
-        // $(".addValue").click(function () {
-        //     console.log("LOLI");
-        // })
+        createNewApp(id, database);
     });
 
 });
+
+function createNewApp(id, database) {
+    // database.ref('users/'+id.val()+'/').set({
+    //     list: $("select").val(),
+    // });
+
+    $("body").on("click", ".addValue", function () {
+        console.log($(this).parent().text());
+        // let updates = {};
+        // updates['/users/'+id.val()+'/list/'+$(this).parent().text()+'/'] = 7;
+        // database.ref().update(updates);            
+    })
+
+    database.ref('users/'+id.val()+'/list').once('value').then(function (snap) {
+        // console.log(snap.val().hasOwnProperty($("select").val()));
+        if (!snap.val() || !snap.val().hasOwnProperty($("select").val())){
+            let updates = {};
+            updates['/users/'+id.val()+'/list/'+$("select").val()+'/'] = "lol";
+            database.ref().update(updates);
+            $("#states").append("<div class=''>"+
+                "<h2>"+$("select").val()+"<input type='button' value='+' class='addValue'></h2>"+
+            "</div>");
+        }
+        
+    })
+
+    
+    // console.log($("select").val());
+    // $(".addValue").click(function () {
+    //     console.log("LOLI");
+    // })
+}
 
 function loadDB() {
     let config = {
@@ -79,15 +91,27 @@ function logInButton(database, id) {
     database.ref('users/').once('value').then(function (snap) {
         //console.log(snap.val().hasOwnProperty($("#details input[type='text']").val()));
         if (snap.val() && snap.val().hasOwnProperty(id.val())) {
-            console.log("BIENVENIDO");
+            // console.log(snap.val()[id.val()]);
             $("#login").hide();
             $("#states").show();
+            retrieveDB(snap.val()[id.val()]);
         }
         else {
             console.log("ERROR");
             id.val("");
         };
     })
+}
+
+function retrieveDB (personDB) {
+    // console.log(personDB.list);
+    if (personDB.list) {
+        for (key of Object.keys(personDB.list)) {
+            $("#states").append("<div class=''>"+
+                "<h2>"+key+"<input type='button' value='+' class='addValue'></h2>"+
+            "</div>");
+        }
+    }
 }
 
 function registerButton(database, id) {
